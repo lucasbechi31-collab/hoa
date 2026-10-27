@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Lendas do Vôlei — 3D</title>
+<style>
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#080d1b;color:#fff;font-family:system-ui,Arial;touch-action:none}#game{position:fixed;inset:0}canvas{width:100%;height:100%;display:block}
+#hud{position:fixed;inset:0;pointer-events:none}.top{display:flex;justify-content:space-between;gap:6px;padding:10px}.panel{background:#0b1539dd;border:1px solid #59d9ff8a;border-radius:12px;padding:8px 11px;box-shadow:0 4px 20px #0005}.brand{font-weight:1000;color:#63e9ff;font-size:clamp(12px,3.4vw,19px)}.small{font-size:10px;color:#c2d7ff}.score{display:flex;gap:12px;font-size:24px;font-weight:1000}.score small{display:block;font-size:9px;text-align:center;color:#c5d6f7}.score span:last-child{color:#ff67aa}
+#msg{position:absolute;top:20%;left:50%;transform:translateX(-50%);font-size:clamp(16px,4vw,27px);font-weight:1000;text-shadow:0 3px 10px #000;white-space:nowrap;text-align:center}
+#bottom{position:absolute;bottom:12px;left:0;right:0;display:flex;justify-content:space-between;align-items:end;padding:0 10px;gap:8px}.move,.acts{display:grid;gap:6px;pointer-events:auto}.move{grid-template-columns:repeat(3,54px)}.acts{grid-template-columns:repeat(2,minmax(60px,82px))}button{min-height:48px;border:1px solid #76eaffaa;border-radius:13px;background:#111d3eea;color:white;font-weight:900;font-size:12px;box-shadow:0 4px 0 #050713;touch-action:none}button:active{transform:translateY(2px);background:#116b90}.acts button{border-color:#ff80bbaa;background:#39132eea}.acts button:active{background:#9b286a}
+#tip{position:absolute;bottom:125px;left:50%;transform:translateX(-50%);font-size:10px;background:#060b18cc;padding:6px 9px;border-radius:9px;white-space:nowrap}
+#loading{position:fixed;inset:0;display:grid;place-items:center;text-align:center;background:#080d1b;padding:24px;z-index:5}#loading.hide{display:none}
+</style>
+</head>
+<body>
+<div id="game"></div><div id="loading"><div><h2 style="color:#63e9ff">🏐 LENDAS DO VÔLEI 3D</h2><p>Carregando a quadra…</p><small>Precisa de internet para carregar os gráficos 3D.</small></div></div>
+<div id="hud"><div class="top"><div class="panel"><div class="brand">LENDAS DO VÔLEI</div><div class="small">3D • TREINO VS BOT</div></div><div class="panel score"><div><small>VOCÊ</small><span id="p">0</span></div><div>:</div><div><small>BOT</small><span id="b">0</span></div></div><div class="panel"><b id="lvl">LV. 1</b><div class="small">XP <span id="xp">0</span></div></div></div><div id="msg">TOQUE EM SACAR</div><div id="tip">Arraste os botões • Ataque perto da bola</div><div id="bottom"><div class="move"><button data-k="left">◀</button><button data-k="jump">▲ PULO</button><button data-k="right">▶</button><button data-k="back" style="grid-column:2">▼</button></div><div class="acts"><button id="serve">SAQUE</button><button id="attack">CORTADA</button><button id="block">BLOQUEIO</button><button id="dive">MERGULHO</button></div></div></div>
+<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+<script>
+(()=>{
+const loading=document.querySelector('#loading'),msg=document.querySelector('#msg');
+if(!window.THREE){loading.innerHTML='<div><h2>Não carregou o 3D</h2><p>Verifique a internet e recarregue a página.</p></div>';return}
+try{
+const T=THREE,root=document.querySelector('#game');
+const scene=new T.Scene();scene.background=new T.Color(0x090e20);scene.fog=new T.Fog(0x090e20,28,65);
+const camera=new T.PerspectiveCamera(52,innerWidth/innerHeight,.1,120);camera.position.set(0,8.5,18);
+const renderer=new T.WebGLRenderer({antialias:true,alpha:false});renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.5));renderer.setSize(innerWidth,innerHeight);renderer.shadowMap.enabled=true;root.appendChild(renderer.domElement);
+scene.add(new T.HemisphereLight(0xa6dfff,0x182039,2.1));const sun=new T.DirectionalLight(0xffffff,2.6);sun.position.set(-7,14,8);sun.castShadow=true;scene.add(sun);
+const mat=(c,r=.7,e=0)=>new T.MeshStandardMaterial({color:c,roughness:r,emissive:e,emissiveIntensity:.18});
+const add=(geo,m,x,y,z,parent=scene)=>{const o=new T.Mesh(geo,m);o.position.set(x,y,z);o.castShadow=true;o.receiveShadow=true;parent.add(o);return o};
+add(new T.PlaneGeometry(200,200),mat(0x0e1429),0,-.35,0).rotation.x=-Math.PI/2;
+add(new T.BoxGeometry(12,.2,22),mat(0x167da3),0,-.02,0);
+add(new T.PlaneGeometry(11.65,21.65),mat(0x174b7b),0,.085,0).rotation.x=-Math.PI/2;
+function courtLine(x1,z1,x2,z2,c=0xe1faff){const dx=x2-x1,dz=z2-z1,len=Math.hypot(dx,dz),o=add(new T.BoxGeometry(.055,.025,len),mat(c,.4,c), (x1+x2)/2,.2,(z1+z2)/2);o.rotation.y=Math.atan2(dx,dz)}
+courtLine(-5.7,-10.6,5.7,-10.6);courtLine(-5.7,10.6,5.7,10.6);courtLine(-5.7,-10.6,-5.7,10.6);courtLine(5.7,-10.6,5.7,10.6);courtLine(-5.7,-6,5.7,-6);courtLine(-5.7,6,5.7,6);
+const net=add(new T.BoxGeometry(12,.12,.12),mat(0xffffff),0,2.55,0);
+for(let x=-5.6;x<=5.61;x+=.3)add(new T.BoxGeometry(.022,1.35,.025),mat(0x9deaff),x,1.88,0);
+for(let y=1.3;y<=2.5;y+=.22)add(new T.BoxGeometry(11.8,.022,.025),mat(0x9deaff),0,y,0);
+for(const x of [-5.95,5.95])add(new T.CylinderGeometry(.07,.07,3.1,10),mat(0xffffff),x,1.55,0);
+function player(shirt,skin,hairColor){const g=new T.Group();scene.add(g);add(new T.CapsuleGeometry(.38,.52,4,10),mat(shirt),0,1.4,0,g);add(new T.SphereGeometry(.27,16,12),mat(skin),0,2.08,0,g);const h=add(new T.SphereGeometry(.29,12,8),mat(hairColor),0,2.27,0,g);h.scale.set(1.1,.56,1);for(const s of [-1,1]){const arm=add(new T.CapsuleGeometry(.09,.48,3,8),mat(skin),s*.45,1.48,0,g);arm.rotation.z=-s*.18;add(new T.CapsuleGeometry(.13,.42,3,8),mat(0x10162a),s*.19,.55,0,g)}add(new T.RingGeometry(.44,.51,24),new T.MeshBasicMaterial({color:shirt,side:T.DoubleSide}),0,.18,0,g).rotation.x=-Math.PI/2;return g}
+const me=player(0x25d9ff,0xf1c19d,0x141a32),bot=player(0xff4595,0xd9a27d,0x211629);me.position.set(0,0,6.8);bot.position.set(0,0,-6.8);
+const ball=add(new T.SphereGeometry(.3,24,18),mat(0xfff4d9,.28,0xff8c2b),0,3,5);for(let i=0;i<3;i++){const s=add(new T.TorusGeometry(.302,.022,6,32),mat(i===1?0x168cff:0xff5b39),0,0,0,ball);s.rotation.y=i*1.05}
+let px=0,py=0,vx=0,vy=0,vz=0,active=false,scoreP=0,scoreB=0,xp=0,lvl=1,hitCD=0,keys={},clock=new T.Clock();
+function reset(){ball.position.set(me.position.x,3,5.5);vx=vy=vz=0;active=false;msg.textContent='TOQUE EM SACAR'}
+function score(who){if(who==='p'){scoreP++;xp+=25;msg.textContent='PONTO SEU! +25 XP'}else{scoreB++;msg.textContent='PONTO DO BOT'}if(xp>=100){xp-=100;lvl++;document.querySelector('#lvl').textContent='LV. '+lvl;msg.textContent+=' • SUBIU DE NÍVEL'}document.querySelector('#p').textContent=scoreP;document.querySelector('#b').textContent=scoreB;document.querySelector('#xp').textContent=xp;setTimeout(reset,1000)}
+function serve(){if(active)return;active=true;ball.position.set(me.position.x,me.position.y+2.6,me.position.z-.5);vx=(Math.random()-.5)*.08;vy=.17;vz=-.27;msg.textContent='SAQUE!'}
+function jump(){if(me.position.y<.03)py=5.3}
+function attack(){if(Math.abs(ball.position.x-me.position.x)<2.5&&Math.abs(ball.position.z-me.position.z)<4.3&&ball.position.y>1){vx=(ball.position.x-me.position.x)*.1;vy=-.04;vz=-.42;msg.textContent='CORTADA!';xp+=5;document.querySelector('#xp').textContent=xp}else msg.textContent='CHEGUE MAIS PERTO DA BOLA'}
+function block(){if(Math.abs(ball.position.z)<2.3){vy=.16;vz=.28;msg.textContent='BLOQUEIO!'}else msg.textContent='APROXIME-SE DA REDE'}
+function dive(){me.position.x=Math.max(-5,Math.min(5,me.position.x+(ball.position.x-me.position.x)*.35));if(Math.abs(ball.position.x-me.position.x)<2.4&&Math.abs(ball.position.z-me.position.z)<3){vy=.12;vz=-.24;msg.textContent='DEFESA!'}else msg.textContent='MERGULHO!'}
+document.querySelector('#serve').onpointerdown=e=>{e.preventDefault();serve()};document.querySelector('#attack').onpointerdown=e=>{e.preventDefault();attack()};document.querySelector('#block').onpointerdown=e=>{e.preventDefault();block()};document.querySelector('#dive').onpointerdown=e=>{e.preventDefault();dive()};
+document.querySelectorAll('[data-k]').forEach(btn=>{const k=btn.dataset.k;const down=e=>{e.preventDefault();keys[k]=true;if(k==='jump')jump()};const up=e=>{e.preventDefault();keys[k]=false};btn.addEventListener('pointerdown',down);btn.addEventListener('pointerup',up);btn.addEventListener('pointercancel',up);btn.addEventListener('pointerleave',up)});
+addEventListener('keydown',e=>{const k=e.key.toLowerCase();if(k==='a'||k==='arrowleft')keys.left=true;if(k==='d'||k==='arrowright')keys.right=true;if(k==='s'||k==='arrowdown')keys.back=true;if(k==='w'||k==='arrowup'||k===' ')jump();if(k==='e')serve();if(k==='f')attack();if(k==='g')block();if(k==='shift')dive()});addEventListener('keyup',e=>{const k=e.key.toLowerCase();if(k==='a'||k==='arrowleft')keys.left=false;if(k==='d'||k==='arrowright')keys.right=false;if(k==='s'||k==='arrowdown')keys.back=false});
+function frame(){requestAnimationFrame(frame);const dt=Math.min(clock.getDelta(),.04);hitCD-=dt;
+if(keys.left)me.position.x-=5*dt;if(keys.right)me.position.x+=5*dt;if(keys.back)me.position.z+=5*dt;me.position.x=T.MathUtils.clamp(me.position.x,-5.1,5.1);me.position.z=T.MathUtils.clamp(me.position.z,1,10);
+if(py!==0||me.position.y>0){me.position.y+=py*dt;py-=12*dt;if(me.position.y<0){me.position.y=0;py=0}}
+bot.position.x+=T.MathUtils.clamp(ball.position.x-bot.position.x,-2.8*dt,2.8*dt);bot.position.x=T.MathUtils.clamp(bot.position.x,-4.8,4.8);
+if(active){ball.position.x+=vx;ball.position.y+=vy;ball.position.z+=vz;vy-=.48*dt;
+if(ball.position.z<-3&&ball.position.z>-8&&ball.position.y<2.5&&Math.abs(ball.position.x-bot.position.x)<1.25&&hitCD<=0){vx=(me.position.x-ball.position.x)*.035;vy=.16;vz=.29;hitCD=1;msg.textContent='O BOT DEVOLVEU!'}
+if(ball.position.y<.28){score(ball.position.z>0?'b':'p')}
+if(ball.position.z<-10.7)score('p');if(ball.position.z>10.7)score('b');if(Math.abs(ball.position.x)>5.8){vx*=-.8;ball.position.x=Math.sign(ball.position.x)*5.5}}
+ball.rotation.x+=dt*2;ball.rotation.z+=dt*1.4;camera.position.x+=(me.position.x*.25-camera.position.x)*dt*2;camera.lookAt(me.position.x*.12,1,0);renderer.render(scene,camera)}
+addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
+loading.classList.add('hide');reset();frame();
+}catch(err){console.error(err);loading.innerHTML='<div><h2>Erro ao iniciar o 3D</h2><p>Atualize a página e confira a conexão.</p></div>'}
+})();
+</script></body></html>
